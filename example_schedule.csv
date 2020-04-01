@@ -1,0 +1,11 @@
+# Fill in table at bottom with comma-separated values for the schedule you'd
+# like jobs to run with during the coming week
+#
+# Day - Mon, Tue, Wed, Thu, Fri, Sat, Sun (what day to start the job on)
+# start - 10am, 12pm, 10:20am, 12:30pm, etc. (what time to start the job)
+# hours - 1h, 5h, etc. (how long the job runs for)
+# cpus - 1, 2, etc. (how many cores you want running)
+# mem_gb - 8gb, 16gb, etc. (how many GB of memory you want reserved)
+day, start, hours, cpus, mem_gb
+Mon, 9am, 4h, 1, 16gb
+Tue, 12:30pm, 4h, 2, 8gb

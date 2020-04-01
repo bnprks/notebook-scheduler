@@ -1,0 +1,7 @@
+rstudio_password.txt
+*.err
+*.out
+config.json
+__pycache__
+notebook.sbatch
+run_schedule.csv
