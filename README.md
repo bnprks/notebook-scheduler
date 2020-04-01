@@ -1,6 +1,12 @@
 # Notebook-scheduler
 Schedule RStudio and Jupyter notebooks to run on Sherlock
 
+**Features**:
+- Schedule notebooks to run up to a week in advance, so they're ready when you want them (no waiting for allocations)
+- Only 2 short commands needed to establish a first connection, and just run `ssh nb` to reconnect
+- Notebook worker node is available to act in place of an `sdev` node
+
+
 ## Installation
 0. Set up your R and python environments on Sherlock ([here's a guide I wrote](https://github.com/GreenleafLab/lab-wiki/wiki/Sherlock-Software-Setup-Guide))
 1. Install Jupyter lab on Sherlock if needed: `conda install -c conda-forge jupyterlab`
@@ -98,3 +104,10 @@ schedule.py get
     - Makes a first-hop connection to `ssh sherlock` (a login node) using normal password + Duo authentication
     - Makes a second-hop connection from the login node to the worker node using publickey authentication. (Requires local `~/.ssh/id_sherlock.pub` to be listed in Sherlock's `~/.ssh/authorized_keys`)
     - Saves both of these connections persistently in local files `~/.ssh/[local_name]@[remote_name]:22` to prevent repeated duo prompts
+### Authentication
+- Notebook passwords are important! Otherwise anyone can connect and run commands
+  as if they were you
+- RStudio uses the script `rserver_auth.sh` to handle its authentication. It checks
+  the password against an environment variable derived from `rstudio_password.txt`
+  on Sherlock.
+- The same password is used for Jupyter, and it is set by the script `set_jupyter_password.py`
