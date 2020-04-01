@@ -51,7 +51,7 @@ Look it up in `rstudio_password.txt` on Sherlock, or reset it using `install.py 
 #### I can't access files on $OAK, $SCRATCH, etc. from Jupyter
 Make a link from your home directory to oak, e.g. by running `ln -s $OAK ~/oak` on Sherlock. The same applies for `$SCRATCH` and other file systems.
 #### `ssh nb` isn't working
-Try removing all saved persistent connections from  your laptop: `rm ~/.ssh/*@*:22`
+Try removing all persistent ssh connections on your laptop: `rm ~/.ssh/*@*:22`
 
 ## Command usage
 ### install.py
