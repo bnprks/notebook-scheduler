@@ -44,7 +44,7 @@ jupyter lab \
 JUPYTER_PID=$!
 
 
-# The server is running in the background; kill it after 18 hours so it can shut down gracefully
+# The server is running in the background; kill it when the time is up so it can shut down gracefully
 sleep <HOURS>h
 kill $R_PID 
 kill $JUPYTER_PID
