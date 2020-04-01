@@ -126,7 +126,7 @@ def cmd_install():
     
     # 4. Copy files to sherlock 
     if yes_or_no("Copy required files to sherlock now? "):
-        print(f"Making directory {install_dir} on sherlock and copying files")
+        print("Making directory {} on sherlock and copying files".format(install_dir))
         subprocess.run(["ssh", "sherlock", "mkdir", "-p", install_dir])
         cp_remote("schedule.py", install_dir)
         cp_remote("install.py", install_dir)
@@ -166,13 +166,13 @@ def substitute_template(text, substitutions_dict):
     return text
 
 def cp_remote(file, dest):
-    subprocess.run(["scp", file, f"sherlock:'{dest}'"])
+    subprocess.run(["scp", file, "sherlock:'{}'".format(dest)])
 
 def cp_string_remote(string, dest):
     f = tempfile.NamedTemporaryFile()
     f.write(string.encode())
     f.flush()
-    subprocess.run(["scp", f.name, f"sherlock:'{dest}'"])
+    subprocess.run(["scp", f.name, "sherlock:'{}'".format(dest)])
 
 def cmd_password(length = 12):
     chars = string.ascii_letters + string.digits

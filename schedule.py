@@ -78,16 +78,16 @@ def cmd_reset(schedule):
     config = json.load(open("config.json"))
     install_dir = config["INSTALL_PATH"]
 
-    print(f"Copying schedule to {install_dir}/current_schedule.csv on Sherlock")
+    print("Copying schedule to {}/current_schedule.csv on Sherlock".format(install_dir))
     install.cp_remote(schedule, install_dir + "/current_schedule.csv")
 
     # Cancel any pending jobs
-    print(f"Cancelling all pending notebook jobs on Sherlock")
+    print("Cancelling all pending notebook jobs on Sherlock")
     pending_jobs = pending_notebook_jobids()
     if len(pending_jobs) > 0:
         run_sherlock(["scancel"] + pending_jobs)
 
-    print(f"Starting schedule on Sherlock")
+    print("Starting schedule on Sherlock")
     cmd_run_next()
     
 
@@ -138,11 +138,11 @@ def cmd_run_next():
 def cmd_get():
     file_dir = str(Path(__file__).parent)
     os.chdir(file_dir)
-    
+
     ## Just copy schedule down from sherlock
     config = json.load(open("config.json"))
     install_dir = config["INSTALL_PATH"]
-    print(f"Fetching schedule from {install_dir}/current_schedule.csv on Sherlock")
+    print("Fetching schedule from {}/current_schedule.csv on Sherlock".format(install_dir))
     schedule = run_sherlock(
         ["cat", install_dir + "/current_schedule.csv"],
         capture_output=True
@@ -234,7 +234,7 @@ def parse_schedule_entry(entry):
         day = time.strptime(entry["day"], "%a").tm_wday
     except ValueError:
         raise ValueError(
-            f"Day \"{entry['day']}\" not recognized. (Use Mon, Tue, etc.)")
+            "Day \"{}\" not recognized. (Use Mon, Tue, etc.)".format(entry['day']))
 
     try:
         start = time.strptime(entry["start"], "%I%p")
@@ -245,8 +245,8 @@ def parse_schedule_entry(entry):
             start = time.strptime(entry["start"], "%I:%M%p")
         except ValueError:
             raise ValueError(
-                f"Start time \"{entry['start']}\" not recognized. "
-                "(Use 12pm, 10am, 10:30am, etc.)")
+                ("Start time \"{}\" not recognized. " +
+                "(Use 12pm, 10am, 10:30am, etc.)").format(entry['start']))
     
     if entry["hours"] == "":
         hours = defaults["hours"]
@@ -271,21 +271,21 @@ def parse_hours(hours):
         return int(hours.lower().rstrip("h"))
     except ValueError:
         raise ValueError(
-            f"Hours \"{hours}\" not recognized. Use e.g. 4h")
+            "Hours \"{}\" not recognized. Use e.g. 4h".format(hours))
 
 def parse_cpus(cpus):
     try:
         return int(cpus)
     except ValueError:
         raise ValueError(
-            f"Cpus \"{cpus}\" not recognized. Use e.g. 1")
+            "Cpus \"{}\" not recognized. Use e.g. 1".format(cpus))
         
 def parse_mem_gb(mem_gb):
     try:
         return int(mem_gb.lower().rstrip("gb"))
     except ValueError:
         raise ValueError(
-            f"Mem_gb \"{mem_gb}\" not recognized. Use e.g. 8gb")
+            "Mem_gb \"{}\" not recognized. Use e.g. 8gb".format(mem_gb))
 
 def write_schedule(entries, path):
     f = open(path, "w")
@@ -296,8 +296,13 @@ def write_schedule(entries, path):
 def entry_to_str(entry):
     days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     start = time.strftime("%I:%M%p", entry["start"])
-    return f"{days[entry['day']]}, {start}, {entry['hours']}h, "\
-           f"{entry['cpus']}, {entry['mem_gb']}gb"
+    return "{}, {}, {}h, {}, {}gb".format(
+               days[entry['day']],
+               start,
+               entry['hours'],
+               entry['cpus'],
+               entry['mem_gb']
+           )
 
 def parse_args(argv):
     if len(argv) < 2:
@@ -310,7 +315,7 @@ def parse_args(argv):
     args = None
 
     if command not in ["reset", "run-now", "run-next", "get"]:
-        print(f"Error: command {command} not recognized")
+        print("Error: command {} not recognized".format(command))
         print(usage)
         sys.exit(1)
 
@@ -331,13 +336,13 @@ def parse_args(argv):
         if len(argv) == 5:
             args["mem_gb"] = parse_mem_gb(argv[4])
         if len(argv) > 5:
-            print(f"Error: too many arguments given for run-now")
+            print("Error: too many arguments given for run-now")
             print(usage)
             sys.exit(1)
     
     if command in ["run-next", "get"]:
         if len(argv) != 2:
-            print(f"Error: {command} must have zero arguments given")
+            print("Error: {} must have zero arguments given".format(command))
             print(usage)
             sys.exit(1)
     
