@@ -2,9 +2,12 @@
 Schedule RStudio and Jupyter notebooks to run on Sherlock
 
 **Features**:
-- Schedule notebooks to run up to a week in advance, so they're ready when you want them (no waiting for allocations)
-- Only 2 short commands needed to establish a first connection, and just run `ssh nb` to reconnect
+- Schedule notebooks to run up to a week in advance, so they're ready when you want them.
+  Or start a one-off notebook if you don't like planning ahead.
+- Easy connections: no repeated Duo prompts, ssh straight from your laptop to a 
+  worker node, and just two commands needed to manage all your connections.
 - Notebook worker node is available to act in place of an `sdev` node
+- Run `schedule.py` from your laptop or on Sherlock -- it works either way
 
 
 ## Installation
