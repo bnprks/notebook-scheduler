@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # Usages:
-# schedule.py set [schedule.csv] -- set the schedule on sherlock 
-# schedule.py run [template.sbatch] [schedule.csv] -- run the next job on sherlock at scheduled time, 
-#   or submit immediately if no schedule is given
+# schedule.py reset [schedule.csv] -- set the schedule on sherlock 
+# schedule.py run-next -- run the next job on sherlock at scheduled time, 
+# schedule.py run-now hours cpus mem_gb -- start a notebook immediately on Sherlock.
 # schedule.py get -- print the current schedule from sherlock
 
 # install.py install -- set installation
@@ -21,12 +21,11 @@ import time
 
 import install
 
-# Ideal workflow
-# - ~once a week run command to reset the schedule on sherlock
-# - occasionally, run immediately outside of the schedule
-# 
+if sys.version_info < (3, 5):
+    print("Error: Python version 3.5 or greater is required")
+    sys.exit(1)
 
-schedule_fields = ["day", "time", "hours", "cpus", "mem_gb"]
+schedule_fields = ["day", "start", "hours", "cpus", "mem_gb"]
 defaults = {
     "hours": 3,
     "cpus": 1,
@@ -48,7 +47,7 @@ schedule.py run-next
     Modifies current_schedule.csv on Sherlock.
     (Run on local computer or on Sherlock)
 
-schedule.py run-now [hours] [cpus] [mem_gb]
+schedule.py run-now hours cpus mem_gb
     Submit a notebook job immediately, outside of normal scheduling.
     (Run on local computer or on Sherlock)
     Defaults are:
@@ -59,10 +58,12 @@ schedule.py get
     (Run on local computer or on Sherlock)
 """.format(**defaults)
 
-
-
 def main():
     command, args = parse_args(sys.argv)
+
+    file_dir = str(Path(__file__).parent)
+    os.chdir(file_dir)
+
     if command == "reset":
         cmd_reset(args)
     elif command == "run-next":
@@ -75,6 +76,7 @@ def main():
 def cmd_reset(schedule):
     ## Parse schedule as a check, then copy to sherlock
     read_schedule(open(schedule).read())
+
     config = json.load(open("config.json"))
     install_dir = config["INSTALL_PATH"]
 
@@ -91,10 +93,7 @@ def cmd_reset(schedule):
     cmd_run_next()
     
 
-def cmd_run_next():
-    file_dir = str(Path(__file__).parent)
-    os.chdir(file_dir)
-    
+def cmd_run_next():    
     if not on_sherlock():
         config = json.load(open("config.json"))
         install_dir = config["INSTALL_PATH"]    
@@ -136,17 +135,12 @@ def cmd_run_next():
 
 
 def cmd_get():
-    file_dir = str(Path(__file__).parent)
-    os.chdir(file_dir)
-
     ## Just copy schedule down from sherlock
     config = json.load(open("config.json"))
     install_dir = config["INSTALL_PATH"]
     print("Fetching schedule from {}/current_schedule.csv on Sherlock".format(install_dir))
-    schedule = run_sherlock(
-        ["cat", install_dir + "/current_schedule.csv"],
-        capture_output=True
-    ).stdout.decode()
+    schedule = install.get_sherlock_output(
+        ["cat", install_dir + "/current_schedule.csv"]).decode().strip()
     
     entries = read_schedule(schedule)
     _, next_time, _ = next_scheduled(entries, datetime.datetime.today())
@@ -154,8 +148,6 @@ def cmd_get():
     print(schedule)
 
 def cmd_run_now(args): 
-    file_dir = str(Path(__file__).parent)
-    os.chdir(file_dir)
     config = json.load(open("config.json"))
 
     notebook_sbatch = install.substitute_template(
@@ -325,7 +317,7 @@ def parse_args(argv):
             print(usage)
             sys.exit(1)
         else:
-            args = argv[2]
+            args = str(Path(argv[2]).absolute())
 
     if command == "run-now":
         args = {**defaults}
@@ -356,8 +348,7 @@ def pending_notebook_jobids():
         "--noheader",
         "--format" ,"%i",
         "--states", "PD"]
-    result = run_sherlock(command, capture_output=True).stdout.decode()
-    return result.splitlines()
+    return install.get_sherlock_output(command).decode().splitlines()
 
 
 def on_sherlock():

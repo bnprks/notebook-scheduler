@@ -15,6 +15,10 @@ import sys
 import tempfile
 import time
 
+if sys.version_info < (3, 5):
+    print("Error: Python version 3.5 or greater is required")
+    sys.exit(1)
+
 usage = """
 Usage:
 install.py --help
@@ -88,62 +92,103 @@ def cmd_install():
     install_dir = config["INSTALL_PATH"]
     rstudio_port = config["R_PORT"]
     jupyter_port = config["JUPYTER_PORT"]
+    print("Your RStudio port number is:", rstudio_port)
+    print("Your Jupyter port number is:", jupyter_port)
 
     # 4. Get user to set up SSH config
-    if yes_or_no("Is it okay to set up files for easy ssh proxying in your ~/.ssh folder? "):
+    if yes_or_no("Set up files for ssh proxying in your ~/.ssh folder now? "):
+        
+        ssh_config_entry = ssh_config.format(
+            username=username, 
+            jupyter_port=jupyter_port, 
+            rstudio_port=rstudio_port,
+            home_dir=str(Path.home().absolute()))
+        ssh_config_path = (Path.home() / ".ssh/config")
+        if not ssh_config_path.exists() or \
+            ssh_config_entry not in ssh_config_path.read_text():
+            print("\nCopy the following text to the file ~/.ssh/config:\n")
+            print(ssh_config_entry)
+            input("\nPress enter once you have copied over the above text")
+
+        print("Testing ssh connection...\n")
+        if not ssh_works():
+            print("\nError connecting via 'ssh sherlock', exiting now")
+            sys.exit(1)
+
         ssh_dir = (Path.home() / ".ssh")
+
+        # Generating ssh key and setting permissions
         if not (ssh_dir / "id_sherlock").is_file():
             print("Generating ~/.ssh/id_sherlock ssh key...")
             subprocess.run([
                 "ssh-keygen", 
                 "-f", str(ssh_dir.absolute()) + "/id_sherlock", 
                 "-N", ""])
+        if not (ssh_dir / "id_sherlock").stat().st_mode & 0o777 == 0o600:
+            print("Fixing permissions on ~/.ssh/id_sherlock")
+            (ssh_dir / "id_sherlock").chmod(0o600)
+        if not (ssh_dir / "id_sherlock.pub").stat().st_mode & 0o777 == 0o644:
+            print("Fixing permissions on ~/.ssh/id_sherlock.pub")
+            (ssh_dir / "id_sherlock.pub").chmod(0o644)
+
+        # Putting ssh key on Sherlock's authorized_keys list
+        try:
+            authorized_keys = get_sherlock_output(
+                ["cat", ".ssh/authorized_keys"]).splitlines()
+            id_sherlock = (Path.home() / ".ssh" / "id_sherlock.pub").read_bytes().strip()
+            setup_authorized_keys = id_sherlock not in authorized_keys
+        except subprocess.CalledProcessError:
+            setup_authorized_keys = True
+        if setup_authorized_keys:
             print("Adding ~/.ssh/id_sherlock.pub to Sherlock's ~/.ssh/authorized_keys")
+            subprocess.run(["ssh", "sherlock", "mkdir", "-p", ".ssh"])
+            
             subprocess.run(
                 ["ssh", "sherlock", "cat >> .ssh/authorized_keys"],
-                stdin=open(ssh_dir / "id_sherlock.pub"))
+                stdin=open(str(ssh_dir / "id_sherlock.pub")))
             subprocess.run(["ssh", "sherlock", "chmod 600 .ssh/authorized_keys"])
-        else:
-            print("Using existing ~/.ssh/id_sherlock ssh key, skipping key setup...")
-        
-        print("\nCopy the following text to the file ~/.ssh/config:\n")
-        
-        print(ssh_config.format(
-            username=username, 
-            jupyter_port=jupyter_port, 
-            rstudio_port=rstudio_port,
-            home_dir=str(Path.home().absolute())))
-        input("\nPress enter once you have copied over the above text")
+        authorized_keys_permissions = get_sherlock_output(
+            ["stat","-c", "%a", ".ssh/authorized_keys"]).strip()
+        if authorized_keys_permissions != b"600":
+            print("Setting Sherlock .ssh/authorized_keys to 600")
+            subprocess.run(["ssh", "sherlock", "chmod", "600", ".ssh/authorized_keys"])
 
         print("Copying script to ~/.ssh/fetch-current-notebook-host.sh")
         (Path.home() / ".ssh/fetch-current-notebook-host.sh")\
             .write_text(fetch_script.format(install_dir=install_dir))
-        print("\nCopy the following text to the file ~/.bash_profile (or ~/.profile):\n")
-        print("alias \"fetch-notebook-location=bash $HOME/.ssh/fetch-current-notebook-host.sh\"")
-        input("\nPress enter once you have copied over the above text")
+        alias_text = "alias \"fetch-notebook-location=bash $HOME/.ssh/fetch-current-notebook-host.sh\""
+        profile = Path.home() / ".bash_profile"
+        if (Path.home() / ".profile").exists() and not profile.exists():
+            profile = (Path.home() / ".profile")
+        if not profile.exists() or alias_text not in profile.read_text():
+            print("\nCopy the following text to the file ~/{}:\n".format(profile.name))
+            print(alias_text)
+            input("\nPress enter once you have copied over the above text")
     else:
-        print("Skipping utility script installation.")
+        print("Skipping ssh config installation.")
+        print("Testing ssh connection...\n")
+        if not ssh_works():
+            print("\nError connecting via 'ssh sherlock', exiting now")
+            sys.exit(1)
+        
     
-    # 4. Copy files to sherlock 
+    # 5. Copy files to sherlock 
     if yes_or_no("Copy required files to sherlock now? "):
-        print("Making directory {} on sherlock and copying files".format(install_dir))
+        print("Making directory {} on sherlock and copying files...".format(install_dir))
         subprocess.run(["ssh", "sherlock", "mkdir", "-p", install_dir])
-        cp_remote("schedule.py", install_dir)
-        cp_remote("install.py", install_dir)
-        cp_remote("set_jupyter_password.py", install_dir)
-        cp_remote("config.json", install_dir)
-        cp_remote("notebook.template.sbatch", install_dir)
-        cp_remote("rserver_auth.sh", install_dir)
+        for file in ["schedule.py", "install.py", "set_jupyter_password.py", 
+                     "config.json", "notebook.template.sbatch", "rserver_auth.sh"]:
+            print("Copying {} to Sherlock".format(file))
+            cp_remote(file, install_dir + "/" + file)
 
         # Make substitutions in rsession.template.conf before upload
-        r_libs = subprocess.run(
-            ["ssh", "sherlock", "printenv", "R_LIBS_USER"], 
-            capture_output=True
-        ).stdout.decode().strip()
+        print("Fetching R_LIBS_USER form Sherlock")
+        r_libs = get_sherlock_output(["printenv", "R_LIBS_USER"]).decode().strip()
         rsession_conf = substitute_template(
             open("rsession.template.conf").read(),
             {"R_LIBS_USER": r_libs}
         )
+        print("Writing rsession.conf to Sherlock")
         cp_string_remote(rsession_conf, install_dir + "/rsession.conf")
     else:
         print("Skipping file copying.")
@@ -166,13 +211,19 @@ def substitute_template(text, substitutions_dict):
     return text
 
 def cp_remote(file, dest):
-    subprocess.run(["scp", file, "sherlock:'{}'".format(dest)])
+    if type(file) is str:
+        file = open(file)
+    subprocess.run(
+        ["ssh", "sherlock", "cat > '{}'".format(dest)],
+        stdin=file,
+    )
 
 def cp_string_remote(string, dest):
-    f = tempfile.NamedTemporaryFile()
+    f = tempfile.TemporaryFile()
     f.write(string.encode())
     f.flush()
-    subprocess.run(["scp", f.name, "sherlock:'{}'".format(dest)])
+    cp_remote(f, dest)
+    
 
 def cmd_password(length = 12):
     chars = string.ascii_letters + string.digits
@@ -185,6 +236,21 @@ def cmd_password(length = 12):
     subprocess.run([
         "ssh", "sherlock", 
         "python", install_dir + "/set_jupyter_password.py", password])
+
+def ssh_works():
+    try:
+        output = get_sherlock_output(["echo", "Hello World"])
+        return output == b"Hello World\n"
+    except:
+        return False
+
+def get_sherlock_output(args):
+    f = tempfile.TemporaryFile()
+    p = subprocess.run(["ssh", "sherlock"] + args, stdout=f, check=True)
+    f.seek(0)
+    return f.read()
+
+    
 
 def yes_or_no(question):
     answer = input(question + "(y/n): ").lower().strip()
