@@ -11,9 +11,9 @@ Schedule RStudio and Jupyter notebooks to run on Sherlock
 
 
 ## Installation
-Requirements: Python version 3.7 or higher on Sherlock and your laptop
 0. Set up your R and python environments on Sherlock ([here's a guide I wrote](https://github.com/GreenleafLab/lab-wiki/wiki/Sherlock-Software-Setup-Guide))
-1. Install Jupyter lab on Sherlock if needed: `conda install -c conda-forge jupyterlab`
+1. Install Jupyter lab on Sherlock if needed: `conda install -c conda-forge jupyterlab`.
+   Make sure it is installed in your default environment.
 2. Clone the notebook on your local laptop/desktop
 ```{bash}
 git clone https://github.com/bnprks/notebook-scheduler.git
@@ -40,19 +40,35 @@ Note: you can only schedule notebooks at most one week in advance, but if you sa
 (Do this on your laptop after you have completed the full installation)
 1. Fetch the id of the current worker node for your notebook: `fetch-notebook-location` on your laptop.
 2. Connect to your worker node: `ssh nb`
-3. Look up the port number for RStudio or Jupyter in `config.json`
+3. Look up the port number for RStudio or Jupyter in `config.json`. The port
+   numbers are also printed whenever you run `install.py install`.
 4. Go to `http://localhost:[port_number]` in your laptop's web browser.
 5. Log on using your Sherlock userid, and the password given during installation.
 
 To reconnect to a notebook after a dropped connection, just run steps 2-4.
 
-## FAQs
+## FAQs/Troubleshooting
 #### I forgot my password 
 Look it up in `rstudio_password.txt` on Sherlock, or reset it using `install.py reset-password` and save it somewhere you'll remember next time.
 #### I can't access files on $OAK, $SCRATCH, etc. from Jupyter
 Make a link from your home directory to oak, e.g. by running `ln -s $OAK ~/oak` on Sherlock. The same applies for `$SCRATCH` and other file systems.
 #### `ssh nb` isn't working
-Try removing all persistent ssh connections on your laptop: `rm ~/.ssh/*@*:22`
+You may see an error like: `Access denied by pam_slurm_adopt: you have no active jobs on this node`.
+This means either that you don't have a current notebook job running on Sherlock, or 
+it is on a different worker node from last time you ran `fetch-notebook-location`.
+*Solution*: First make sure you have a running notebook on Sherlock, then re-run
+`fetch-notebook-location`. If that fails, try removing the persistent ssh connections 
+on your laptop: `rm ~/.ssh/*@*:22`.
+#### When I ssh, I get an error stating `Bad owner or permissions on ~/.ssh/config`
+Your `~/.ssh/config` file writable only by your user. Try running
+`sudo chmod 644 ~/.ssh/config`. When you run `ls -l ~/.ssh/config` you should then
+see something like: `-rw-r--r--@ 1 [your userid]` for the permissions and file owner
+#### I want to run my Jupyter notebook using a different environment
+Try the approach from this Stack Overflow answer: https://stackoverflow.com/a/53546634
+#### I need to debug why my notebook is crashing
+Read the logs on Sherlock. Go to your install location and read `notebook.err`,
+`jupyter.err`, or `rserver.err`
+
 
 ## Command usage
 ### install.py
