@@ -11,6 +11,7 @@ Schedule RStudio and Jupyter notebooks to run on Sherlock
 
 
 ## Installation
+Requirements: Python version 3.7 or higher on Sherlock and your laptop
 0. Set up your R and python environments on Sherlock ([here's a guide I wrote](https://github.com/GreenleafLab/lab-wiki/wiki/Sherlock-Software-Setup-Guide))
 1. Install Jupyter lab on Sherlock if needed: `conda install -c conda-forge jupyterlab`
 2. Clone the notebook on your local laptop/desktop
