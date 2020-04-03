@@ -222,6 +222,7 @@ def cp_string_remote(string, dest):
     f = tempfile.TemporaryFile()
     f.write(string.encode())
     f.flush()
+    f.seek(0)
     cp_remote(f, dest)
     
 
@@ -236,6 +237,8 @@ def cmd_password(length = 12):
     subprocess.run([
         "ssh", "sherlock", 
         "python", install_dir + "/set_jupyter_password.py", password])
+    print("Password reset."
+    print("Restart any notebooks running on Sherlock see the new password take effect")
 
 def ssh_works():
     try:
