@@ -237,7 +237,7 @@ def cmd_password(length = 12):
     subprocess.run([
         "ssh", "sherlock", 
         "python", install_dir + "/set_jupyter_password.py", password])
-    print("Password reset."
+    print("Password reset.")
     print("Restart any notebooks running on Sherlock see the new password take effect")
 
 def ssh_works():
