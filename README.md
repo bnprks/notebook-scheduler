@@ -56,6 +56,7 @@ Make a link from your home directory to oak, e.g. by running `ln -s $OAK ~/oak` 
 You may see an error like: `Access denied by pam_slurm_adopt: you have no active jobs on this node`.
 This means either that you don't have a current notebook job running on Sherlock, or 
 it is on a different worker node from last time you ran `fetch-notebook-location`.
+
 *Solution*: First make sure you have a running notebook on Sherlock, then re-run
 `fetch-notebook-location`. If that fails, try removing the persistent ssh connections 
 on your laptop: `rm ~/.ssh/*@*:22`.
