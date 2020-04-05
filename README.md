@@ -52,10 +52,12 @@ To reconnect to a notebook after a dropped connection, just run steps 2-4.
 Look it up in `rstudio_password.txt` on Sherlock, or reset it using `install.py reset-password` and save it somewhere you'll remember next time.
 #### I can't access files on $OAK, $SCRATCH, etc. from Jupyter
 Make a link from your home directory to oak, e.g. by running `ln -s $OAK ~/oak` on Sherlock. The same applies for `$SCRATCH` and other file systems.
-#### `ssh nb` isn't working
-You may see an error like: `Access denied by pam_slurm_adopt: you have no active jobs on this node`.
+#### My connection to the notebook isn't working
+When you run `ssh nb`, you may see an error like: 
+`Access denied by pam_slurm_adopt: you have no active jobs on this node`.
 This means either that you don't have a current notebook job running on Sherlock, or 
 it is on a different worker node from last time you ran `fetch-notebook-location`.
+Other connection errors that you may see can have the same cause.
 
 *Solution*: First make sure you have a running notebook on Sherlock, then re-run
 `fetch-notebook-location`. If that fails, try removing the persistent ssh connections 
