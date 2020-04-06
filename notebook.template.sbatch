@@ -15,7 +15,7 @@ INSTALL_DIR=<INSTALL_PATH>
 
 # Only schedule next job if we're doing a scheduled submission
 if [ "<BEGIN>" != "now" ]; then
-	python3 $INSTALL_DIR/schedule.py $INSTALL_DIR/current_schedule.csv
+	python3 $INSTALL_DIR/schedule.py run-next
 fi
 
 hostname > $INSTALL_DIR/current-host
