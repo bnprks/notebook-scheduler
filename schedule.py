@@ -176,6 +176,7 @@ def cmd_run_now(args):
 
 def next_scheduled(entries, today):
     next = None
+    next_time = None
     for entry in entries:
         if next is None or scheduled_time(entry, today) < next_time:
             next = entry

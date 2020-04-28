@@ -34,6 +34,9 @@ install.py reset-password
 """
 
 def main():
+    if on_sherlock():
+        print("Error: run install.py from your local computer, not on Sherlock")
+        sys.exit(0)
     install_dir = str(Path(__file__).parent)
     os.chdir(install_dir)
 
@@ -49,6 +52,9 @@ def main():
         cmd_install()
     elif command == "reset-password":
         cmd_password()
+
+def on_sherlock():
+    return "SHERLOCK" in os.environ
 
 def cmd_install():
     # 1. Get user input
