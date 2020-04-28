@@ -68,9 +68,13 @@ Your `~/.ssh/config` file writable only by your user. Try running
 see something like: `-rw-r--r--@ 1 [your userid]` for the permissions and file owner
 #### I want to run my Jupyter notebook using a different environment
 Try the approach from this Stack Overflow answer: https://stackoverflow.com/a/53546634
+#### RStudio isn't showing plots for ChromVar, Seurat, etc.
+[From Alex Trevino] These libraries require libpng1.6 to use, whereas the
+Sherlock default is libpng1.2. You may need to add `libpng/1.6.29` to your `.bashrc`
 #### I need to debug why my notebook is crashing
 Read the logs on Sherlock. Go to your install location and read `notebook.err`,
 `jupyter.err`, or `rserver.err`
+
 
 
 ## Command usage
