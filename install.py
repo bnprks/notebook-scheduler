@@ -187,6 +187,9 @@ def cmd_install():
             print("Copying {} to Sherlock".format(file))
             cp_remote(file, install_dir + "/" + file)
 
+        # Make sure rserver_auth.sh is executable
+        subprocess.run(["ssh", "sherlock", "chmod", "u+x", install_dir + "/rserver_auth.sh"])
+
         # Make substitutions in rsession.template.conf before upload
         print("Fetching R_LIBS_USER from Sherlock")
         r_libs = get_sherlock_output(["echo", "$R_LIBS_USER"]).decode().strip()
