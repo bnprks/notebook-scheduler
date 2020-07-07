@@ -47,6 +47,17 @@ Note: you can only schedule notebooks at most one week in advance, but if you sa
 
 To reconnect to a notebook after a dropped connection, just run steps 2-4.
 
+## Advanced Usage
+### Custom version of RStudio
+The version of RStudio on Sherlock is a bit out-dated currently (1.1.423), and
+can run in to bugs occasionally with newer versions of R (3.6.1 and up). If you
+want to use a custom version of RStudio, I recommend adding the following to your
+`config.json` file, which will use a copy of version 1.3.959 I saved on Sherlock:
+```json
+"RSERVER_BINARY": "/home/groups/wjg/resources/software/rstudio-server/bin/rserver",
+"RSERVER_EXTRA_ARGS": "--server-pid-file=$INSTALL_DIR/rstudio-server.pid --server-data-dir=$INSTALL_DIR/rstudio-server"
+```
+
 ## FAQs/Troubleshooting
 #### I forgot my password 
 Look it up in `rstudio_password.txt` on Sherlock, or reset it using `install.py reset-password` and save it somewhere you'll remember next time.

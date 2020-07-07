@@ -2,7 +2,7 @@
 
 # Taken from https://github.com/stanford-rc/sh_ood-apps/blob/master/sh_rstudio/template/bin/auth
 # Confirm username is supplied
-if [[ $# -ne 1 ]]; then
+if [[ $# -lt 1 ]]; then
   echo "Usage: auth USERNAME"
   exit 1
 fi

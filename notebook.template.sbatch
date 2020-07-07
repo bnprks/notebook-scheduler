@@ -25,10 +25,18 @@ JUPYTER_PORT=<JUPYTER_PORT>
 
 ml gsl rstudio R/3.6.1
 
+if [ -z "<RSERVER_BINARY>" ]; then
+	RSERVER_PATH="rserver"
+else
+	RSERVER_PATH="<RSERVER_BINARY>"
+fi
+RSERVER_EXTRA_ARGS="<RSERVER_EXTRA_ARGS>"
+
 cd $HOME
 
 export RSTUDIO_PASSWORD=$(cat $INSTALL_DIR/rstudio_password.txt)
-rserver --www-port=$R_PORT \
+$RSERVER_PATH $RSERVER_EXTRA_ARGS \
+	--www-port=$R_PORT \
 	--auth-none 0 \
 	--rsession-which-r `which R` \
 	--auth-pam-helper-path "$INSTALL_DIR/rserver_auth.sh" \

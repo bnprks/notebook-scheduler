@@ -105,24 +105,23 @@ def cmd_run_next():
     # Guaranteed to be running on sherlock here
     
     config = json.load(open("config.json"))
+    for k in config:
+        config[k] = str(config[k])
     
     ## 1. Parse schedule
     today = datetime.datetime.today()
     entries = read_schedule(open("current_schedule.csv").read())
     next, next_time, rest = next_scheduled(entries, today)
     ## 2. Fill in notebook template
+    config.update({
+        "HOURS": str(next["hours"]),
+        "MEM_GB": str(next["mem_gb"]),
+        "CPUS": str(next["cpus"]),
+        "BEGIN": next_time.strftime("%Y-%m-%dT%H:%M")
+    })
     notebook_sbatch = install.substitute_template(
         open("notebook.template.sbatch").read(),
-        {
-            "INSTALL_PATH": config["INSTALL_PATH"],
-            "R_PORT":str(config["R_PORT"]),
-            "JUPYTER_PORT":str(config["JUPYTER_PORT"]),
-            "PARTITION": str(config["PARTITION"]),
-            "HOURS": str(next["hours"]),
-            "MEM_GB": str(next["mem_gb"]),
-            "CPUS": str(next["cpus"]),
-            "BEGIN": next_time.strftime("%Y-%m-%dT%H:%M")
-        }
+        config
     )
     open("notebook.sbatch", 'w').write(notebook_sbatch)
     ## 3. Run sbatch command
@@ -149,19 +148,17 @@ def cmd_get():
 
 def cmd_run_now(args): 
     config = json.load(open("config.json"))
-
+    for k in config:
+        config[k] = str(config[k])
+    config.update({
+        "HOURS": str(args["hours"]),
+        "MEM_GB": str(args["mem_gb"]),
+        "CPUS": str(args["cpus"]),
+        "BEGIN": "now"
+    })
     notebook_sbatch = install.substitute_template(
         open("notebook.template.sbatch").read(),
-        {
-            "INSTALL_PATH": config["INSTALL_PATH"],
-            "R_PORT":str(config["R_PORT"]),
-            "JUPYTER_PORT":str(config["JUPYTER_PORT"]),
-            "PARTITION": str(config["PARTITION"]),
-            "HOURS": str(args["hours"]),
-            "MEM_GB": str(args["mem_gb"]),
-            "CPUS": str(args["cpus"]),
-            "BEGIN": "now"
-        }
+        config
     )
     print("Writing to notebook.sbatch on Sherlock...")
     if on_sherlock():
