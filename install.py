@@ -84,6 +84,11 @@ def cmd_install():
             "Sherlock slurm partitions (default=wjg,sfgf,biochem): ") \
                 or "wjg,sfgf,biochem"
 
+    if "RSERVER_BINARY" not in config:
+        config["RSERVER_BINARY"] = "rserver"
+    if "RSERVER_EXTRA_ARGS" not in config:
+        config["RSERVER_EXTRA_ARGS"] = ""
+
     # 2. Decide on port numbers
     if "JUPYTER_PORT" not in config:
         config["JUPYTER_PORT"] = random.randint(49152, 65535)
