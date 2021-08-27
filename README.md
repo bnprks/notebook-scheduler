@@ -85,6 +85,14 @@ Sherlock default is libpng1.2. You may need to add `libpng/1.6.29` to your `.bas
 #### I need to debug why my notebook is crashing
 Read the logs on Sherlock. Go to your install location and read `notebook.err`,
 `jupyter.err`, or `rserver.err`
+#### RStudio isn't using the right R libraries
+From Betty Liu:  
+When you run `.libPaths()` in RStudio, you don't see your custom library path, but rather 
+```
+"/home/users/sunetid/R/x86_64-pc-linux-gnu-library/3.6" "/share/software/user/open/R/3.6.1/lib64/R/library"
+```
+
+*Solution*: Go to the file `notebook-scheduler/rsession.conf` on sherlock and add a line `r-libs-user=/your/custom/r/lib/path`
 
 
 
