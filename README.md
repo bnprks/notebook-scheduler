@@ -92,7 +92,7 @@ When you run `.libPaths()` in RStudio, you don't see your custom library path, b
 "/home/users/sunetid/R/x86_64-pc-linux-gnu-library/3.6" "/share/software/user/open/R/3.6.1/lib64/R/library"
 ```
 
-*Solution*: Go to the file `notebook-scheduler/rsession.conf` on sherlock and add a line `r-libs-user=/your/custom/r/lib/path`
+*Solution*: Go to the file `notebook-scheduler/rsession.conf` on sherlock and add a line `r-libs-user=/your/custom/r/lib/path`. Normally this will be handled automatically when you run `python install.py install` and copy the required files to sherlock.
 
 
 

@@ -196,12 +196,14 @@ def cmd_install():
         subprocess.run(["ssh", "sherlock", "chmod", "u+x", install_dir + "/rserver_auth.sh"])
 
         # Make substitutions in rsession.template.conf before upload
-        print("Fetching R_LIBS_USER from Sherlock")
-        r_libs = get_sherlock_output(["echo", "$R_LIBS_USER"]).decode().strip()
+        print("Fetching R_LIBS_USER from Sherlock...", end="")
+        # Use bash -l to get R_LIBS_USER even if it's only set in bash_profile
+        r_libs = get_sherlock_output(["bash", "-l", "-c", "'echo $R_LIBS_USER'"]).decode().strip()
         if r_libs:
            r_libs_line = "r-libs-user=" + r_libs
         else:
             r_libs_line = ""
+        print("found R_LIBS_USER=\"{}\"".format(r_libs))
         rsession_conf = substitute_template(
             open("rsession.template.conf").read(),
             {"R_LIBS_USER": r_libs_line}
