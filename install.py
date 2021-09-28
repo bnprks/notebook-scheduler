@@ -171,6 +171,8 @@ def cmd_install():
         profile = Path.home() / ".bash_profile"
         if (Path.home() / ".profile").exists() and not profile.exists():
             profile = (Path.home() / ".profile")
+        elif "zsh" in os.environ["SHELL"]:
+            profile = (Path.home() / ".zshrc")
         if not profile.exists() or alias_text not in profile.read_text():
             print("\nCopy the following text to the file ~/{}:\n".format(profile.name))
             print(alias_text)
