@@ -23,7 +23,7 @@ hostname > $INSTALL_DIR/current-host
 R_PORT=<R_PORT>
 JUPYTER_PORT=<JUPYTER_PORT>
 
-ml gsl rstudio R/3.6.1
+ml gsl rstudio R/4.0.2
 
 RSERVER_PATH="<RSERVER_BINARY>"
 RSERVER_EXTRA_ARGS="<RSERVER_EXTRA_ARGS>"
