@@ -77,6 +77,15 @@ may need to do the extraction off of Sherlock, as `rpm2cpio` is no longer workin
 on Sherlock at the time of writing. But copying the resulting `rstudio-server` folder
 onto Sherlock should result in a working install.
 
+### Use multiple conda environments with jupyter
+To easily switch between multiple conda environments in jupyter, try using the 
+[nb_conda_kernels](https://github.com/Anaconda-Platform/nb_conda_kernels) package. 
+You install `nb_conda_kernels` in your base environment, then for each environment you want to switch between, you
+install `ipykernel` in that environment. Once you have set this up, you'll have the option to choose what conda
+environment you want to use when you select the kernel for a notebook. (In jupyter lab, you can switch kernels by 
+clicking in the top-right corner of your running notebook, where it might say "Python 3")
+
+
 ## FAQs/Troubleshooting
 #### I forgot my password 
 Look it up in `rstudio_password.txt` on Sherlock, or reset it using `install.py reset-password` and save it somewhere you'll remember next time.
