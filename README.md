@@ -49,14 +49,33 @@ To reconnect to a notebook after a dropped connection, just run steps 2-4.
 
 ## Advanced Usage
 ### Custom version of RStudio
-The version of RStudio on Sherlock is a bit out-dated currently (1.1.423), and
-can run in to bugs occasionally with newer versions of R (3.6.1 and up). If you
-want to use a custom version of RStudio, I recommend adding the following to your
-`config.json` file, which will use a copy of version 1.3.959 I saved on Sherlock:
-```json
-"RSERVER_BINARY": "/home/groups/wjg/resources/software/rstudio-server/bin/rserver",
-"RSERVER_EXTRA_ARGS": "--server-pid-file=$INSTALL_DIR/rstudio-server.pid --server-data-dir=$INSTALL_DIR/rstudio-server"
-```
+The version of RStudio on Sherlock is a bit out-dated currently (1.3.1093), and
+can't display plots for newer versions of R (4.1 and up). If you
+want to use a newer version of RStudio, you can take the following steps:
+
+1. On Sherlock, make a file called `rserver_db.conf` in the notebook-scheduler directory, with the following contents (Set the directory to the absolute path of your notebook-scheduler directory as desired)
+   ```
+   provider=sqlite
+   directory=/home/users/USERNAME/notebook-scheduler/rserver_db/
+   ```
+
+   
+
+2.  Add the following to your
+   `config.json` file, which will use a copy of version `2022.07.1-554` I saved on Sherlock:
+
+   ```JSON
+   "RSERVER_BINARY": "/home/groups/wjg/resources/software/rstudio-server-2022-07/bin/rserver",
+   "RSERVER_EXTRA_ARGS": "--database-config-file=$INSTALL_DIR/rserver_db.conf --server-pid-file=$INSTALL_DIR/rstudio-server.pid --server-data-dir=$INSTALL_DIR/rstudio-server --server-user $USER"
+   ```
+
+To create a new custom binary for use on Sherlock, download the rmp following instruction 
+from the [RStudio website](https://www.rstudio.com/products/rstudio/download-server/redhat-centos/).
+Currently Sherlock runs on CentOS 7. To unpack, run `rpm2cpio file.rm | cpio -idmv`, 
+as suggested on [this stack overflow](https://stackoverflow.com/a/18787544). You 
+may need to do the extraction off of Sherlock, as `rpm2cpio` is no longer working
+on Sherlock at the time of writing. But copying the resulting `rstudio-server` folder
+onto Sherlock should result in a working install.
 
 ## FAQs/Troubleshooting
 #### I forgot my password 
