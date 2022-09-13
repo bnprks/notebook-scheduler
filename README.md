@@ -89,6 +89,8 @@ clicking in the top-right corner of your running notebook, where it might say "P
 ## FAQs/Troubleshooting
 #### I forgot my password 
 Look it up in `rstudio_password.txt` on Sherlock, or reset it using `install.py reset-password` and save it somewhere you'll remember next time.
+If Jupyter still won't log you in, try resetting the password with `python set_jupyter_password.py [desired_password]`, or
+run `jupyter notebook password`.
 #### I can't access files on $OAK, $SCRATCH, etc. from Jupyter
 Make a link from your home directory to oak, e.g. by running `ln -s $OAK ~/oak` on Sherlock. The same applies for `$SCRATCH` and other file systems.
 #### My connection to the notebook isn't working
