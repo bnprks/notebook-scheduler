@@ -53,10 +53,10 @@ The version of RStudio on Sherlock is a bit out-dated currently (1.3.1093), and
 can't display plots for newer versions of R (4.1 and up). If you
 want to use a newer version of RStudio, you can take the following steps:
 
-1. On Sherlock, make a file called `rserver_db.conf` in the notebook-scheduler directory, with the following contents (Set the directory to the absolute path of your notebook-scheduler directory as desired)
+1. On Sherlock, make a file called `rserver_db.conf` in the notebook-scheduler directory, with the following contents (Set the directory to the absolute path of your notebook-scheduler directory, replacing MY_USERNAME with your actual username)
    ```
    provider=sqlite
-   directory=/home/users/USERNAME/notebook-scheduler/rserver_db/
+   directory=/home/users/MY_USERNAME/notebook-scheduler/rserver_db/
    ```
 
    
