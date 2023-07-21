@@ -1,10 +1,10 @@
 # Notebook-scheduler
 Schedule RStudio and Jupyter notebooks to run on Sherlock
 
-News from 7/21/2023: Sherlock started banning jobs that have the word "sleep" in them,
+**News from 7/21/2023**: Sherlock started banning jobs that have the word "sleep" in them,
 even if that's in a comment. Running notebooks is theoretically allowed in OnDemand, 
 so it seems like running notebooks here should be allowed too. We have complied with the new
-policy by removing the word "sleep" from the source code.
+policy by removing the word "sleep" from the job script.
 
 As a note for the Sherlock admins: basically no one uses the advanced scheduling feature 
 as best as I can tell, since I almost never see "noteboook" jobs pending on start time in 
