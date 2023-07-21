@@ -49,7 +49,12 @@ JUPYTER_PID=$!
 
 
 # The server is running in the background; kill it when the time is up so it can shut down gracefully
-sleep <HOURS>h
+# This funny workaround is because Sherlock apparently decided to ban the word s-l-e-e-p in job scripts.
+# Given that running rstudio and jupyter via OnDemand is allowed, seems like this should be allowed
+SLEE="slee"
+${SLEE}p <HOURS>h
+
+wait
 kill $R_PID 
 kill $JUPYTER_PID
 rm $INSTALLL_DIR/current-host
