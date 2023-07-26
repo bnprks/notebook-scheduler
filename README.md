@@ -79,8 +79,6 @@ want to use a newer version of RStudio, you can take the following steps:
    "RSERVER_EXTRA_ARGS": "--database-config-file=$INSTALL_DIR/rserver_db.conf --server-pid-file=$INSTALL_DIR/rstudio-server.pid --server-data-dir=$INSTALL_DIR/rstudio-server --server-user $USER"
    ```
 
-3. In your `notebook.template.sbatch` file on your laptop, change the line `ml gsl rstudio R/4.0.2` to `ml gsl rstudio R/4.0.2 postrgres`
-
 To create a new custom binary for use on Sherlock, download the rmp following instruction 
 from the [RStudio website](https://www.rstudio.com/products/rstudio/download-server/redhat-centos/).
 Currently Sherlock runs on CentOS 7. To unpack, run `rpm2cpio file.rm | cpio -idmv`, 
