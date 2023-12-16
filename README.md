@@ -1,23 +1,27 @@
 # Notebook-scheduler
-Schedule RStudio and Jupyter notebooks to run on Sherlock
+Schedule RStudio, Jupyter notebooks, and code server sessions to run on Sherlock
+
+**News from 12/15/2023**: Sherlock's SSH configuration has been updated such that worker nodes only allow
+hostbased auth. This seems to break any normal way to set up SSH tunneling. As a workaround, the install script
+will now help you set up an `nb` command, which will connect to your currently running notebook and set up all
+port forwarding appropriately in a single command.
 
 **News from 7/21/2023**: Sherlock started banning jobs that have the word "sleep" in them,
-even if that's in a comment. Running notebooks is theoretically allowed in OnDemand, 
-so it seems like running notebooks here should be allowed too. We have complied with the new
-policy by removing the word "sleep" from the job script.
-
-As a note for the Sherlock admins: basically no one uses the advanced scheduling feature 
-as best as I can tell, since I almost never see "noteboook" jobs pending on start time in 
-the global queue. Also, at least for me using OnDemand is not an option because the
-RStudio script crashes for me immediately and I don't have edit access to the job script.
+even if that's in a comment. The job script has been updated to avoid hitting this ban.
+As a note for the Sherlock admins: this script is largely the equivalent of running OnDemand,
+but it is a bit more resource efficient because it allows a single job to run rstudio, jupyter, and code-server.
 
 **Features**:
-- Schedule notebooks to run up to a week in advance, so they're ready when you want them.
-  Or start a one-off notebook if you don't like planning ahead.
 - Easy connections: no repeated Duo prompts, ssh straight from your laptop to a 
-  worker node, and just two commands needed to manage all your connections.
+  worker node, and just one command needed to connect.
 - Notebook worker node is available to act in place of an `sdev` node
 - Run `schedule.py` from your laptop or on Sherlock -- it works either way
+- Ability to Schedule notebooks to run up to a week in advance.
+  Or start a one-off notebook if you don't like planning ahead.
+
+  - Note to sherlock admins: Given that multi-day jobs are allowed, scheduled notebooks
+   seems more resource friendly since it will automatically free up resources outside
+   of your planned working hours. Much better than scheduling a 5-day job to run jupyter notebooks.
 
 
 ## Installation
@@ -48,8 +52,7 @@ Note: you can only schedule notebooks at most one week in advance, but if you sa
 
 ### Connecting to Running Notebooks
 (Do this on your laptop after you have completed the full installation)
-1. Fetch the id of the current worker node for your notebook: `fetch-notebook-location` on your laptop.
-2. Connect to your worker node: `ssh nb`
+1. Connect to your worker node by running `nb`, which you set up during installation.
 3. Look up the port number for RStudio or Jupyter in `config.json`. The port
    numbers are also printed whenever you run `install.py install`.
 4. Go to `http://localhost:[port_number]` in your laptop's web browser.
@@ -104,19 +107,10 @@ run `jupyter notebook password`.
 #### I can't access files on $OAK, $SCRATCH, etc. from Jupyter
 Make a link from your home directory to oak, e.g. by running `ln -s $OAK ~/oak` on Sherlock. The same applies for `$SCRATCH` and other file systems.
 #### My connection to the notebook isn't working
-When you run `ssh nb`, you may see an error like: 
-`Access denied by pam_slurm_adopt: you have no active jobs on this node`.
-This means either that you don't have a current notebook job running on Sherlock, or 
-it is on a different worker node from last time you ran `fetch-notebook-location`.
-Other connection errors that you may see can have the same cause.
-
 *Solution*: First make sure you have a running notebook on Sherlock, then re-run
-`fetch-notebook-location`. If that fails, try removing the persistent ssh connections 
+`nb`. If that fails, try removing the persistent ssh connections 
 on your laptop: `rm ~/.ssh/*@*:22`.
-#### When I ssh, I get an error stating `Bad owner or permissions on ~/.ssh/config`
-Your `~/.ssh/config` file writable only by your user. Try running
-`sudo chmod 644 ~/.ssh/config`. When you run `ls -l ~/.ssh/config` you should then
-see something like: `-rw-r--r--@ 1 [your userid]` for the permissions and file owner
+
 #### I want to run my Jupyter notebook using a different environment
 Try the approach from this Stack Overflow answer: https://stackoverflow.com/a/53546634
 #### RStudio isn't showing plots for ChromVar, Seurat, etc.
@@ -184,12 +178,8 @@ schedule.py get
 - `notebook.template.sbatch` is the template that will be run, but all of the variables `<VARIABLE>` are substitued by `schedule.py` before job submission
 ### Easy SSH connections
 - Every time a notebook runs, it writes the worker node id to `current-host` on Sherlock
-- `fetch-notebook-location` (alias for `bash ~/.ssh/fetch-current-notebook-host.sh`) fetches the node id from Sherlock and saves it to your laptop at `~/.ssh/current-notebook-host`
-- With the recommended `~/.ssh/config` settings, `ssh nb`:
-    - Looks up the worker node id saved in `~/.ssh/current-notebook-host`
-    - Makes a first-hop connection to `ssh sherlock` (a login node) using normal password + Duo authentication
-    - Makes a second-hop connection from the login node to the worker node using publickey authentication. (Requires local `~/.ssh/id_sherlock.pub` to be listed in Sherlock's `~/.ssh/authorized_keys`)
-    - Saves both of these connections persistently in local files `~/.ssh/[local_name]@[remote_name]:22` to prevent repeated duo prompts
+- `nb` (alias for `bash ~/.ssh/connect-nb.sh`) fetches the node id from Sherlock, then runs ssh to connect to it with port forwarding
+
 ### Authentication
 - Notebook passwords are important! Otherwise anyone can connect and run commands
   as if they were you
@@ -197,3 +187,5 @@ schedule.py get
   the password against an environment variable derived from `rstudio_password.txt`
   on Sherlock.
 - The same password is used for Jupyter, and it is set by the script `set_jupyter_password.py`
+- The same password is used for code server, and it is passed
+  via environment variable in the notebook.template.sbatch script

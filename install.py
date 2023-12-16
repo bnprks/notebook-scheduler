@@ -94,7 +94,9 @@ def cmd_install():
         config["JUPYTER_PORT"] = random.randint(49152, 65535)
     if "R_PORT" not in config:
         config["R_PORT"] = random.randint(49152, 65535)
-    assert config["JUPYTER_PORT"] != config["R_PORT"]
+    if "CODE_SERVER_PORT" not in config:
+        config["CODE_SERVER_PORT"] = random.randint(49152, 65535)
+    assert len(set([config["JUPYTER_PORT"], config["R_PORT"], config["CODE_SERVER_PORT"]])) == 3
 
     # 3. Write out config (possibly with modifications made)
     json.dump(config , open("config.json", "w"), indent=4, sort_keys=True)
@@ -103,17 +105,14 @@ def cmd_install():
     install_dir = config["INSTALL_PATH"]
     rstudio_port = config["R_PORT"]
     jupyter_port = config["JUPYTER_PORT"]
+    code_server_port = config["CODE_SERVER_PORT"]
     print("Your RStudio port number is:", rstudio_port)
     print("Your Jupyter port number is:", jupyter_port)
+    print("Your Code server port number is:", code_server_port)
 
     # 4. Get user to set up SSH config
     if yes_or_no("Set up files for ssh proxying in your ~/.ssh folder now? "):
-        
-        ssh_config_entry = ssh_config.format(
-            username=username, 
-            jupyter_port=jupyter_port, 
-            rstudio_port=rstudio_port,
-            home_dir=str(Path.home().absolute()))
+        ssh_config_entry = ssh_config.format(username=username)
         ssh_config_path = (Path.home() / ".ssh/config")
         if not ssh_config_path.exists() or \
             ssh_config_entry not in ssh_config_path.read_text():
@@ -126,48 +125,16 @@ def cmd_install():
             print("\nError connecting via 'ssh sherlock', exiting now")
             sys.exit(1)
 
-        ssh_dir = (Path.home() / ".ssh")
-
-        # Generating ssh key and setting permissions
-        if not (ssh_dir / "id_sherlock").is_file():
-            print("Generating ~/.ssh/id_sherlock ssh key...")
-            subprocess.run([
-                "ssh-keygen", 
-                "-f", str(ssh_dir.absolute()) + "/id_sherlock", 
-                "-N", ""])
-        if not (ssh_dir / "id_sherlock").stat().st_mode & 0o777 == 0o600:
-            print("Fixing permissions on ~/.ssh/id_sherlock")
-            (ssh_dir / "id_sherlock").chmod(0o600)
-        if not (ssh_dir / "id_sherlock.pub").stat().st_mode & 0o777 == 0o644:
-            print("Fixing permissions on ~/.ssh/id_sherlock.pub")
-            (ssh_dir / "id_sherlock.pub").chmod(0o644)
-
-        # Putting ssh key on Sherlock's authorized_keys list
-        try:
-            authorized_keys = get_sherlock_output(
-                ["cat", ".ssh/authorized_keys"]).splitlines()
-            id_sherlock = (Path.home() / ".ssh" / "id_sherlock.pub").read_bytes().strip()
-            setup_authorized_keys = id_sherlock not in authorized_keys
-        except subprocess.CalledProcessError:
-            setup_authorized_keys = True
-        if setup_authorized_keys:
-            print("Adding ~/.ssh/id_sherlock.pub to Sherlock's ~/.ssh/authorized_keys")
-            subprocess.run(["ssh", "sherlock", "mkdir", "-p", ".ssh"])
-            
-            subprocess.run(
-                ["ssh", "sherlock", "cat >> .ssh/authorized_keys"],
-                stdin=open(str(ssh_dir / "id_sherlock.pub")))
-            subprocess.run(["ssh", "sherlock", "chmod 600 .ssh/authorized_keys"])
-        authorized_keys_permissions = get_sherlock_output(
-            ["stat","-c", "%a", ".ssh/authorized_keys"]).strip()
-        if authorized_keys_permissions != b"600":
-            print("Setting Sherlock .ssh/authorized_keys to 600")
-            subprocess.run(["ssh", "sherlock", "chmod", "600", ".ssh/authorized_keys"])
-
-        print("Copying script to ~/.ssh/fetch-current-notebook-host.sh")
-        (Path.home() / ".ssh/fetch-current-notebook-host.sh")\
-            .write_text(fetch_script.format(install_dir=install_dir))
-        alias_text = "alias \"fetch-notebook-location=bash $HOME/.ssh/fetch-current-notebook-host.sh\""
+        print("Copying script to ~/.ssh/connect-nb.sh")
+        (Path.home() / ".ssh/connect-nb.sh")\
+            .write_text(connect_script.format(
+                install_dir=install_dir, 
+                jupyter_port=jupyter_port, 
+                rstudio_port=rstudio_port,
+                code_server_port=code_server_port,
+            ))
+        alias_text = "alias \"nb=bash $HOME/.ssh/connect-nb.sh\""
+        
         profile = Path.home() / ".bash_profile"
         if (Path.home() / ".profile").exists() and not profile.exists():
             profile = (Path.home() / ".profile")
@@ -297,21 +264,16 @@ Host sherlock
     ControlMaster auto
     ControlPersist yes
     ControlPath ~/.ssh/%l%r@%h:%p
-
-Host nb
-    User {username}
-    ProxyCommand bash -c 'host=$(cat $HOME/.ssh/current-notebook-host); ssh sherlock -W $host:%p'
-    IdentityFile {home_dir}/.ssh/id_sherlock
-    ControlMaster auto
-    ControlPersist yes
-    ControlPath ~/.ssh/%l%r@%h:%p
-    LocalForward localhost:{rstudio_port} localhost:{rstudio_port}
-    LocalForward localhost:{jupyter_port} localhost:{jupyter_port}
 """
 
-fetch_script = """\
+connect_script = """\
 #!/bin/bash
-ssh sherlock 'cat {install_dir}/current-host' > $HOME/.ssh/current-notebook-host
+NB=$(ssh sherlock 'cat {install_dir}/current-host')
+if [ ! -z "$NB" ]; then
+    ssh -t sherlock -L {rstudio_port}:$NB:{rstudio_port} -L {jupyter_port}:$NB:{jupyter_port} -L {code_server_port}:$NB:{code_server_port} ssh $NB
+else
+    echo "Error: No running notebook job detected on Sherlock"
+fi
 """
 
 if __name__ == "__main__":
